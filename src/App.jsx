@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import "./App.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 const PIXABAY_API_KEY = "52777745-82f9c18661ee1e22caf521d01";
 // import ReactMarkdown from "react-markdown";
 // import "dotenv/config"
@@ -12,22 +12,29 @@ function App() {
   const ai = new GoogleGenerativeAI("AIzaSyCFvWXLqz6sTMOWEo8tEaFdD42szjZ2LMM"); 
 const apiKey = "52777745-82f9c18661ee1e22caf521d01";
 
-  const [dishName, setDishName] = useState("cheif")
+  const [dishName, setDishName] = useState("")
   const [images, setImages]= useState([])
 
-fetch(
-  `https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(
-    dishName
-  )}&image_type=photo`
-)
-  .then((res) => res.json())
-  .then((data) => {
-    console.log(data.hits); 
-    setImages(data.hits[0].largeImageURL);
-  })
 
-  .catch((err) => console.error("Error:", err));
-console.log(images);
+ useEffect(() => {
+   if (!dishName) return; // only run when dishName exists
+   const fetchImage = async () => {
+     try {
+       const res = await fetch(
+         `https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(
+           dishName
+         )}&image_type=photo&order=popular`
+       );
+       const data = await res.json();
+       if (data.hits.length > 0) {
+         setImages(data.hits[0].largeImageURL);
+       }
+     } catch (err) {
+       console.error("Error fetching image:", err);
+     }
+   };
+   fetchImage();
+ }, [dishName]);
 
   async function handleSearch(e) {
     e.preventDefault();
@@ -39,7 +46,7 @@ console.log(images);
     setLoading(true);
     const model = ai.getGenerativeModel({ model: "gemini-2.0-flash" });
     const prompt = `
-If "${ingredients}" is an ingredient list, generate a short recipe in clean HTML.
+If "${ingredients}" is an ingredient list, first decide what common dish can be made from it (for example "Garlic Pasta" or "Tomato Soup"), then generate a short recipe for that dish in clean HTML.
 If it is a dish name, return that recipe in the same HTML format with text left style.
 Use:
 - <h2> for title
