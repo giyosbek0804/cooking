@@ -9,45 +9,45 @@ function App() {
   const [ingredients, setIngredients] = useState("");
   const [recipe, setRecipe] = useState("");
   const [loading, setLoading] = useState(false);
-  const ai = new GoogleGenerativeAI("AIzaSyCFvWXLqz6sTMOWEo8tEaFdD42szjZ2LMM"); 
-const apiKey = "52777745-82f9c18661ee1e22caf521d01";
+  const ai = new GoogleGenerativeAI("AIzaSyCFvWXLqz6sTMOWEo8tEaFdD42szjZ2LMM");
+  const apiKey = "52777745-82f9c18661ee1e22caf521d01";
 
-  const [dishName, setDishName] = useState("")
-  const [images, setImages]= useState([])
+  const [dishName, setDishName] = useState("");
+  const [images, setImages] = useState([]);
 
-
- useEffect(() => {
-   if (!dishName) return; // only run when dishName exists
-   const fetchImage = async () => {
-     try {
-       const res = await fetch(
-         `https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(
-           dishName
-         )}&image_type=photo&order=popular`
-       );
-       const data = await res.json();
-       if (data.hits.length > 0) {
-         setImages(data.hits[0].largeImageURL);
-       }
-     } catch (err) {
-       console.error("Error fetching image:", err);
-     }
-   };
-   fetchImage();
- }, [dishName]);
+  useEffect(() => {
+    if (!dishName) return; // only run when dishName exists
+    const fetchImage = async () => {
+      try {
+        const res = await fetch(
+          `https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(
+            dishName
+          )}&image_type=photo&order=popular`
+        );
+        const data = await res.json();
+        if (data.hits.length > 0) {
+          setImages(data.hits[0].largeImageURL);
+        }
+      } catch (err) {
+        console.error("Error fetching image:", err);
+      }
+    };
+    fetchImage();
+  }, [dishName]);
 
   async function handleSearch(e) {
     e.preventDefault();
-    
+
     if (!ingredients.trim()) {
       alert("Please enter some ingredients");
-      return
+      return;
     }
     setLoading(true);
     const model = ai.getGenerativeModel({ model: "gemini-2.0-flash" });
     const prompt = `
 If "${ingredients}" is an ingredient list, first decide what common dish can be made from it (for example "Garlic Pasta" or "Tomato Soup"), then generate a short recipe for that dish in clean HTML.
-If it is a dish name, return that recipe in the same HTML format with text left style.
+If it is a dish name, return that recipe in the same HTML format .
+Do not say HTML recipe just say recipe.
 Use:
 - <h2> for title
 - <p> for description
@@ -57,11 +57,12 @@ Use:
 Do not include markdown or code blocks.
 create h3 before ingridients and steps.
 `;
-    const result = await model.generateContent(
-      prompt
-    );
+    const result = await model.generateContent(prompt);
     let responceText = result.response.text();
-    responceText = responceText.replaceAll(/```html/g, "").replaceAll(/```/g, "").trim();
+    responceText = responceText
+      .replaceAll(/```html/g, "")
+      .replaceAll(/```/g, "")
+      .trim();
     setRecipe(responceText);
     setIngredients("");
     setLoading(false);
@@ -71,13 +72,14 @@ create h3 before ingridients and steps.
     setDishName(name);
   }
 
-  
- 
-  
   return (
     <>
+      <div className="name">
+        <h1>Cooking Assistance</h1>
+        <p>Type ingredients or food names to get delicious recipies</p>
+      </div>
       <form action="" onSubmit={handleSearch}>
-        <input
+        <input placeholder="eggs, tomato, pizza..."
           type="text"
           value={ingredients}
           onChange={(e) => setIngredients(e.target.value)}
@@ -89,18 +91,13 @@ create h3 before ingridients and steps.
       ) : (
         <div className="recipe">
           <h1>generated recipe:</h1>
-          <div
-         
-            dangerouslySetInnerHTML={{ __html: recipe }}
-          />
+          <div dangerouslySetInnerHTML={{ __html: recipe }} />
         </div>
       )}
 
-      
-        <img src={images} alt="" />
-     
+      <img src={images} alt="" className="img" />
     </>
   );
-  }
+}
 
 export default App;
