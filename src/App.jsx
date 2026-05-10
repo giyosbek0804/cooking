@@ -35,13 +35,10 @@ function App() {
   }, [dishName]);
 
   const MODELS = [
-    "gemini-3-flash-preview",
     "gemini-3-flash",
-    "gemini-2.5-flash-lite-preview",
     "gemini-2.5-flash-lite",
-    "gemini-2.5-flash-preview",
     "gemini-2.5-flash",
-    "gemini-1.5-flash", // Safe baseline
+    // "gemini-1.5-flash", // Safe baseline
   ];
 
   async function handleSearch(e) {
