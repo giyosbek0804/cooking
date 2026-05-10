@@ -1,7 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import "./App.css";
 import { useState, useEffect } from "react";
-const PIXABAY_API_KEY = "52777745-82f9c18661ee1e22caf521d01";
 // import ReactMarkdown from "react-markdown";
 // import "dotenv/config"
 
@@ -9,8 +8,8 @@ function App() {
   const [ingredients, setIngredients] = useState("");
   const [recipe, setRecipe] = useState("");
   const [loading, setLoading] = useState(false);
-  const ai = new GoogleGenerativeAI("AIzaSyA8F46yec69tylxgmqhDPFegesXwSZciEo");
-  const apiKey = "52777745-82f9c18661ee1e22caf521d01";
+  const ai = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+  const apiKey = import.meta.env.VITE_PIXABAY_API_KEY;
 
   const [dishName, setDishName] = useState("");
   const [images, setImages] = useState([]);
