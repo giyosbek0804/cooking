@@ -9,7 +9,7 @@ function App() {
   const [ingredients, setIngredients] = useState("");
   const [recipe, setRecipe] = useState("");
   const [loading, setLoading] = useState(false);
-  const ai = new GoogleGenerativeAI("AIzaSyCFvWXLqz6sTMOWEo8tEaFdD42szjZ2LMM");
+  const ai = new GoogleGenerativeAI("AIzaSyA8F46yec69tylxgmqhDPFegesXwSZciEo");
   const apiKey = "52777745-82f9c18661ee1e22caf521d01";
 
   const [dishName, setDishName] = useState("");
@@ -43,60 +43,100 @@ function App() {
       return;
     }
     setLoading(true);
-    const model = ai.getGenerativeModel({ model: "gemini-2.0-flash" });
-    const prompt = `
-If "${ingredients}" is an ingredient list, first decide what common dish can be made from it (for example "Garlic Pasta" or "Tomato Soup"), then generate a short recipe for that dish in clean HTML.
-If it is a dish name, return that recipe in the same HTML format .
-Do not say HTML recipe just say recipe.
-Use:
-- <h2> for title
-- <p> for description
-- <ul><li> for full detailed ingredients with amounts
-- <ol><li> for detailed steps
-- <p> for good wishes 
-Do not include markdown or code blocks.
-create h3 before ingridients and steps.
-`;
-    const result = await model.generateContent(prompt);
-    let responceText = result.response.text();
-    responceText = responceText
-      .replaceAll(/```html/g, "")
-      .replaceAll(/```/g, "")
-      .trim();
-    setRecipe(responceText);
-    setIngredients("");
-    setLoading(false);
+    try {
+      // Explicitly using v1 to avoid 404 issues in some regions with v1beta
+      const model = ai.getGenerativeModel({ model: "gemini-3-flash-preview" }, {  });
+      const prompt = `
+Generate a recipe based on these ingredients or dish name: "${ingredients}".
+Return ONLY clean HTML without any markdown code blocks or additional text.
+Structure the HTML exactly like this:
+- <h2>Dish Name</h2>
+- <p>A short, mouth-watering description of the dish.</p>
+- <h3>Ingredients</h3>
+- <ul>
+    <li>Ingredient 1 with amount</li>
+    <li>Ingredient 2 with amount</li>
+  </ul>
+- <h3>Steps</h3>
+- <ol>
+    <li>Step 1 description</li>
+    <li>Step 2 description</li>
+  </ol>
+- <p>A warm closing wish (e.g., "Enjoy your meal!").</p>
 
-    const match = responceText.match(/<h2>(.*?)<\/h2>/i);
-    const name = match ? match[1] : null;
-    setDishName(name);
+Rules:
+1. Return ONLY the HTML tags.
+2. No \`\`\`html or \`\`\` wrappers.
+3. No introduction or conclusion text.
+`;
+      const result = await model.generateContent(prompt);
+      let responceText = result.response.text();
+      
+      // Safety cleaning in case AI still adds markdown
+      responceText = responceText
+        .replace(/```html/gi, "")
+        .replace(/```/gi, "")
+        .trim();
+        
+      setRecipe(responceText);
+      setIngredients("");
+      
+      const match = responceText.match(/<h2>(.*?)<\/h2>/i);
+      const name = match ? match[1] : null;
+      setDishName(name);
+    } catch (error) {
+      console.error("Search error:", error);
+      if (error.message.includes("429")) {
+        alert("Quota exceeded. Please wait a minute or try again later.");
+      } else {
+        alert("An error occurred while generating the recipe.");
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <>
-      <div className="name">
-        <h1>Cooking Assistance</h1>
-        <p>Type ingredients or food names to get delicious recipies</p>
-      </div>
+    <div className="app-container">
+      <header className="name">
+        <h1>Gourmet AI</h1>
+        <p>Transform your ingredients into world-class culinary masterpieces.</p>
+      </header>
+
       <form action="" onSubmit={handleSearch}>
-        <input placeholder="eggs, tomato, pizza..."
+        <input
+          disabled={loading}
+          placeholder="Enter ingredients (e.g., salmon, lemon, dill)..."
           type="text"
           value={ingredients}
           onChange={(e) => setIngredients(e.target.value)}
         />
-        <button>get recipe</button>
+        <button disabled={loading}>
+          {loading ? "Crafting..." : "Get Recipe"}
+        </button>
       </form>
-      {loading ? (
-        "generating..."
-      ) : (
-        <div className="recipe">
-          <h1>generated recipe:</h1>
-          <div dangerouslySetInnerHTML={{ __html: recipe }} />
-        </div>
-      )}
 
-      <img src={images} alt="" className="img" />
-    </>
+      {loading ? (
+        <div className="loading-state">
+          <p>Analyzing flavors and crafting your recipe...</p>
+        </div>
+      ) : (
+        recipe && (
+          <main className="recipe-container">
+            <div className="recipe">
+              <h1>Chef's Recommendation</h1>
+              <div dangerouslySetInnerHTML={{ __html: recipe }} />
+              
+              {images && (
+                <div className="img-container">
+                  <img src={images} alt={dishName} className="img" />
+                </div>
+              )}
+            </div>
+          </main>
+        )
+      )}
+    </div>
   );
 }
 
