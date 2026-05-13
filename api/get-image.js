@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Dish name is required' });
   }
 
-  const PIXABAY_API_KEY = process.env.PIXABAY_API_KEY || process.env.VITE_PIXABAY_API_KEY;
+  const PIXABAY_API_KEY = process.env.PIXABAY_API_KEY;
 
   if (!PIXABAY_API_KEY) {
     return res.status(500).json({ error: 'Pixabay API key not configured' });

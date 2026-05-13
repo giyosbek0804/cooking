@@ -11,9 +11,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Ingredients are required' });
   }
 
-  // Use the PRIVATE key (no VITE_ prefix)
-  // Vercel will provide this from the Environment Variables dashboard
-  const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
   
   if (!GEMINI_API_KEY) {
     return res.status(500).json({ error: 'API key not configured' });
